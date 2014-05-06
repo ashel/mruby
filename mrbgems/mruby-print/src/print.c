@@ -1,6 +1,10 @@
 #include "mruby.h"
 #include "mruby/string.h"
 #include <stdio.h>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 static void
 printstr(mrb_state *mrb, mrb_value obj)
@@ -12,6 +16,9 @@ printstr(mrb_state *mrb, mrb_value obj)
     s = RSTRING_PTR(obj);
     len = RSTRING_LEN(obj);
     fwrite(s, len, 1, stdout);
+#ifdef _WIN32
+    OutputDebugString(s);
+#endif
   }
 }
 
