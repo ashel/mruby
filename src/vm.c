@@ -1306,15 +1306,19 @@ RETRY_TRY_BLOCK:
       }
       mrb->c->ci->argc = len;
       if (argc < len) {
-        regs[len+1] = *blk; /* move block */
-        if (argv0 != argv) {
-          value_move(&regs[1], argv, argc-m2); /* m1 + o */
-        }
-        if (m2) {
-          int mlen = m2;
-          if (argc-m2 <= m1) {
+        int mlen = m2;
+        if (argc < m1+m2) {
+          if (m1 < argc)
             mlen = argc - m1;
-          }
+          else
+            mlen = 0;
+        }
+        regs[len+1] = *blk; /* move block */
+        SET_NIL_VALUE(regs[argc+1]);
+        if (argv0 != argv) {
+          value_move(&regs[1], argv, argc-mlen); /* m1 + o */
+        }
+        if (mlen) {
           value_move(&regs[len-m2+1], &argv[argc-mlen], mlen);
         }
         if (r) {
@@ -1325,16 +1329,18 @@ RETRY_TRY_BLOCK:
           pc += argc - m1 - m2 + 1;
       }
       else {
+        int rnum = 0;
         if (argv0 != argv) {
           regs[len+1] = *blk; /* move block */
           value_move(&regs[1], argv, m1+o);
         }
         if (r) {
-          regs[m1+o+1] = mrb_ary_new_from_values(mrb, argc-m1-o-m2, argv+m1+o);
+          rnum = argc-m1-o-m2;
+          regs[m1+o+1] = mrb_ary_new_from_values(mrb, rnum, argv+m1+o);
         }
         if (m2) {
           if (argc-m2 > m1) {
-            value_move(&regs[m1+o+r+1], &argv[argc-m2], m2);
+            value_move(&regs[m1+o+r+1], &argv[m1+o+rnum], m2);
           }
         }
         if (argv0 == argv) {
